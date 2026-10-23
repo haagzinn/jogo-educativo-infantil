@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo Educativo - Pré-Escola II</title>
+    <style>
+        :root {
+            --primary-orange: #FF6B00;
+            --primary-blue: #0088FF;
+            --primary-green: #2ECC71;
+            --primary-red: #E74C3C;
+            --bg-card: rgba(255, 255, 255, 0.95);
+            --font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-family);
+            user-select: none;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #8CE3FA;
+        }
+
+        /* FUNDO PREENCHENDO 100% DA TELA */
+        .bg-classroom {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+            background-image: url('https://i.pinimg.com/1200x/55/02/7f/55027f902d063d05a79b9deb68ce5c75.jpg');
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
+        }
+
+        .app-viewport {
+            position: relative;
+            z-index: 2;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 12px;
+        }
+
+        .screen {
+            display: none;
+            width: 96vw;
+            max-width: 1050px;
+            height: 90vh;
+            max-height: 880px;
+            background: var(--bg-card);
+            border-radius: 28px;
+            box-shadow: 0 16px 48px rgba(0,0,0,0.35);
+            border: 6px solid #FFFFFF;
+            padding: 24px;
+            overflow-y: auto;
+            position: relative;
+            animation: popIn 0.3s ease-out;
+        }
+
+        .screen.active {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        @keyframes popIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        h1 { font-size: 2.2rem; color: #0F172A; text-align: center; margin-bottom: 8px; }
+        h2 { font-size: 1.7rem; color: #1E293B; text-align: center; margin-bottom: 12px; }
+        p { font-size: 1.15rem; color: #334155; text-align: center; margin-bottom: 16px; }
+
+        .form-container {
+            width: 100%;
+            max-width: 480px;
+            background: #FFFFFF;
+            padding: 20px;
+            border-radius: 22px;
+            border: 3px solid #E2E8F0;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            color: #334155;
+            margin-bottom: 6px;
+            font-size: 1.1rem;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 14px 18px;
+            font-size: 1.15rem;
+            border: 3px solid #CBD5E0;
+            border-radius: 14px;
+            outline: none;
+            background-color: #FFFFFF;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(0, 136, 255, 0.2);
+        }
+
+        .btn {
+            background: var(--primary-orange);
+            color: #FFF;
+            border: none;
+            padding: 16px 42px;
+            font-size: 1.35rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 6px 0 #D95300;
+            transition: all 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 0 #D95300;
+        }
+
+        .btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #D95300;
+        }
+
+        .btn-audio {
+            background: var(--primary-blue);
+            box-shadow: 0 5px 0 #0066CC;
+            padding: 10px 24px;
+            font-size: 1.05rem;
+            margin-bottom: 12px;
+        }
+
+        .map-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 12px;
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        .map-card {
+            background: #FFFFFF;
+            border: 4px solid #E2E8F0;
+            border-radius: 18px;
+            padding: 14px 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .map-card.unlocked {
+            border-color: var(--primary-blue);
+            background: #F0F9FF;
+        }
+
+        .map-card.status-correct {
+            border-color: var(--primary-green);
+            background: #F0FDF4;
+        }
+
+        .map-card.status-wrong {
+            border-color: var(--primary-red);
+            background: #FEF2F2;
+        }
+
+        .map-card.locked {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #F1F5F9;
+        }
+
+        .map-card .num {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #0F172A;
+        }
+
+        .map-card .tag {
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            padding: 2px 6px;
+            border-radius: 8px;
+            margin-top: 4px;
+            display: inline-block;
+        }
+
+        .map-card .status-icon {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-top: 2px;
+        }
+
+        .map-card.status-correct .status-icon {
+            color: var(--primary-green);
+        }
+
+        .map-card.status-wrong .status-icon {
+            color: var(--primary-red);
+        }
+
+        .question-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 2px dashed #CBD5E0;
+        }
+
+        .question-prompt-img {
+            width: 100%;
+            max-width: 420px;
+            height: 150px;
+            object-fit: contain;
+            margin: 6px 0 14px 0;
+            border-radius: 16px;
+            border: 3px solid #E2E8F0;
+            background: #FFF;
+            padding: 6px;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            width: 100%;
+            flex-grow: 1;
+            margin-top: 8px;
+        }
+
+        .options-grid.cols-3 {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .option-card {
+            background: #FFFFFF;
+            border: 5px solid #E2E8F0;
+            border-radius: 22px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+        }
+
+        .option-card:hover {
+            border-color: var(--primary-blue);
+            background: #F0F9FF;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 136, 255, 0.15);
+        }
+
+        .option-card img {
+            width: 95px;
+            height: 95px;
+            object-fit: cover;
+            border-radius: 16px;
+            border: 2px solid #CBD5E0;
+        }
+
+        .option-card span {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #0F172A;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.65);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .modal-content {
+            background: #FFFFFF;
+            padding: 30px;
+            border-radius: 26px;
+            text-align: center;
+            max-width: 450px;
+            width: 90%;
+            box-shadow: 0 12px 36px rgba(0,0,0,0.35);
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @media (max-width: 700px) {
+            .options-grid, .options-grid.cols-3 {
+                grid-template-columns: 1fr;
+            }
+            .screen { padding: 16px; height: 96vh; }
+            .option-card { flex-direction: row; justify-content: flex-start; padding-left: 20px; gap: 18px; }
+            .option-card img { width: 65px; height: 65px; }
+            .option-card span { font-size: 1.15rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-classroom"></div>
+
+    <div class="app-viewport">
+        
+        <!-- TELA 1: CADASTRO DO ALUNO -->
+        <div id="screen-welcome" class="screen active">
+            <h1>🏫 Bem-vindo ao Jogo Educativo! 🎮</h1>
+            <p>Preencha os dados do aluno para iniciar:</p>
+            
+            <div class="form-container">
+                <div class="form-group">
+                    <label for="student-name">Nome do Aluno(a):</label>
+                    <input type="text" id="student-name" placeholder="Digite o nome completo">
+                </div>
+                
+                <div class="form-group">
+                    <label for="student-age">Idade:</label>
+                    <select id="student-age">
+                        <option value="">Selecione a idade</option>
+                        <option value="4">4 anos</option>
+                        <option value="5">5 anos</option>
+                        <option value="6">6 anos</option>
+                        <option value="7">7 anos</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="student-school">Escola / Turma:</label>
+                    <input type="text" id="student-school" placeholder="Ex: E.M. Pré-escola II">
+                </div>
+            </div>
+
+            <button class="btn" onclick="startGame()">🚀 JOGAR AGORA</button>
+        </div>
+
+        <!-- TELA 2: MAPA DE PROGRESSÃO -->
+        <div id="screen-map" class="screen">
+            <h2>🗺️ Mapa de Aventuras Interativo</h2>
+            <p id="player-greeting">Olá! Selecione a fase para jogar:</p>
+
+            <div class="map-grid" id="map-grid"></div>
+
+            <button class="btn" style="margin-top:20px; background:var(--primary-blue);" onclick="playCurrentQuestion()">▶️ CONTINUAR JOGO</button>
+        </div>
+
+        <!-- TELA 3: TELA DE PERGUNTAS -->
+        <div id="screen-game" class="screen">
+            <div class="question-header">
+                <span id="level-indicator" style="font-weight:bold; color:var(--primary-orange); font-size: 1.1rem;">Nível Fácil</span>
+                <span id="score-indicator" style="font-weight:bold; color:var(--primary-green); font-size: 1.1rem;">⭐ 0 Pontos</span>
+            </div>
+
+            <button class="btn btn-audio" onclick="speakQuestion()">🔊 Ouvir Pergunta</button>
+
+            <h2 id="question-text" style="font-size:1.55rem;">Texto da Pergunta</h2>
+
+            <!-- IMAGEM DE CONTEXTO DA PERGUNTA -->
+            <img id="question-prompt-img" class="question-prompt-img" src="" alt="Desafio da pergunta" style="display:none;">
+
+            <!-- ALTERNATIVAS GRANDES -->
+            <div class="options-grid" id="options-container"></div>
+        </div>
+
+        <!-- TELA 4: CERTIFICADO FINAL -->
+        <div id="screen-end" class="screen">
+            <div style="font-size: 4rem; margin-bottom: 10px;">🏆</div>
+            <h1>Parabéns! Você Concluiu o Jogo!</h1>
+            <p>Você é um Super Campeão!</p>
+
+            <div style="border:4px dashed var(--primary-orange); padding:22px; border-radius:20px; width:100%; max-width:440px; background:#FFFBEB; margin-bottom:20px;">
+                <h3 id="cert-name" style="color:#B45309; margin-bottom:10px; font-size: 1.4rem;">Aluno: -</h3>
+                <p id="cert-info" style="margin-bottom:12px; font-weight:bold; font-size: 1.1rem;">Idade: - | Escola: -</p>
+                <p id="cert-score" style="font-weight:bold; color:var(--primary-blue); font-size: 1.2rem; margin-bottom:8px;">⭐ Pontuação: 0 pontos</p>
+                <div style="display:flex; justify-content:space-around; margin-top:12px; padding-top:10px; border-top:2px dashed #E2E8F0;">
+                    <span id="cert-correct" style="color:var(--primary-green); font-weight:bold; font-size:1.2rem;">✓ Acertos: 0</span>
+                    <span id="cert-wrong" style="color:var(--primary-red); font-weight:bold; font-size:1.2rem;">✗ Erros: 0</span>
+                </div>
+            </div>
+
+            <button class="btn" onclick="restartGame()">🔄 JOGAR NOVAMENTE</button>
+        </div>
+
+    </div>
+
+    <!-- MODAL DE FEEDBACK -->
+    <div id="feedback-modal" class="modal">
+        <div class="modal-content">
+            <h2 id="modal-title" style="margin-bottom: 10px;">Título</h2>
+            <p id="modal-msg" style="margin-bottom: 20px;">Mensagem...</p>
+            <button class="btn" id="modal-btn" onclick="closeModal()">Continuar</button>
+        </div>
+    </div>
+
+    <script>
+        const IMAGES = {
+            pato: 'https://thumbs.dreamstime.com/b/pato-2998165.jpg',
+            cachorro: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400&q=80',
+            gato: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400&q=80',
+            cavalo: 'https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?w=400&q=80',
+            circulo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTIevzlEwOF1lqgg6grB0FnhCey3eAKHUsVzSm4PZidmg&s=10',
+            quadrado: 'https://cdn-icons-png.flaticon.com/512/5112/5112764.png',
+            triangulo: 'https://images.vexels.com/media/users/3/158599/isolated/preview/0fbc706e9e6f6c0c56e11ab4525af2aa-silhueta-angular-aguda-do-triangulo-isosceles.png',
+            retangulo: 'https://static.vecteezy.com/ti/vetor-gratis/t2/46045180-arredondado-retangular-icone-retangulo-forma-vetor.jpg',
+            macas3: 'https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400&q=80',
+            sol: 'https://png.pngtree.com/png-vector/20221128/ourmid/pngtree-icon-of-sun-png-image_6484830.png',
+            lua: 'https://img.magnific.com/vetores-gratis/lua-e-estrelas-amarelas_78370-8018.jpg?semt=ais_hybrid&w=740&q=80',
+            estrela: 'https://img.magnific.com/vetores-gratis/estilo-star-cartoon_78370-3904.jpg?semt=ais_hybrid&w=740&q=80',
+            nuvem: 'https://img.magnific.com/vetores-premium/e-um-menino_996343-203.jpg?semt=ais_hybrid&w=740&q=80',
+            peixe: 'https://images.unsplash.com/photo-1522069169874-c58ec4b76be5?w=400&q=80',
+            galinha: 'https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?w=400&q=80',
+            coelho: 'https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?w=400&q=80',
+            escova: 'https://marketplace.canva.com/BfcB8/MAGB31BfcB8/1/tl/canva-escova-de-dente-rosa-MAGB31BfcB8.png',
+            pente: 'https://img.magnific.com/vetores-premium/um-pente-para-a-cor-do-cabelo-e-laranja_734922-79.jpg?semt=ais_hybrid&w=740&q=80',
+            colher: 'https://thumbs.dreamstime.com/b/uma-colher-de-desenho-brilhante-se-senta-sobre-um-fundo-branco-adicionando-toque-divertido-%C3%A0-cozinha-colorida-fica-plana-comum-342002186.jpg',
+            lapis: 'https://thumbs.dreamstime.com/b/%C3%ADcone-de-l%C3%A1pis-desenho-simples-ilustra%C3%A7%C3%A3o-clipe-vetor-plano-231764503.jpg',
+            joaninhas_grupo1: 'https://thumbs.dreamstime.com/b/grupo-de-joaninhas-69337891.jpg',
+            joaninhas_grupo2: 'https://static.vecteezy.com/ti/vetor-gratis/p1/2945692-conjunto-de-cinco-joaninhas-vermelhas-vetor.jpg',
+            joaninhas_grupo3: 'https://static.vecteezy.com/ti/vetor-gratis/p1/36330111-conjunto-do-fofa-desenho-animado-joaninhas-em-uma-branco-fundo-bebe-adesivos-icones-decoracao-elementos-vetor.jpg',
+            sequencia_azul: 'https://i.pinimg.com/736x/2d/8b/2d/2d8b2d8f6f6d5feda97ddfa79030ff7d.jpg',
+            sequencia_vermelho: 'https://upload.wikimedia.org/wikipedia/commons/d/d7/Circulo_vermelho.png?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=original',
+            passarinho: 'https://marketplace.canva.com/9nAng/MAEInV9nAng/1/tl/canva-passarinho-com-peito-amarelo-MAEInV9nAng.jpg',
+            mochila: 'https://thumbs.dreamstime.com/b/trouxa-da-escola-20315028.jpg',
+            bola: 'https://img.magnific.com/vetores-gratis/bola-de-futebol-realista-isolada-de-vetor-sobre-o-branco_1284-41932.jpg?semt=ais_hybrid&w=740&q=80',
+            copo: 'https://png.pngtree.com/png-clipart/20240706/original/pngtree-cartoon-doodle-glass-tumbler-png-image_15501630.png',
+            bone: 'https://static.vecteezy.com/ti/vetor-gratis/p1/8655845-cap-sketch-vetor.jpg',
+            lego_verde: 'https://st2.depositphotos.com/1025953/6142/i/950/depositphotos_61429523-stock-photo-green-lego-cube.jpg',
+            lego_azul: 'https://png.pngtree.com/png-vector/20251016/ourlarge/pngtree-a-classic-blue-lego-brick-with-four-circular-connection-points-png-image_17654280.webp',
+            lego_amarelo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTxgMouRS25KWIvhVgNtmNU0MeE0RVYVpPlOdASlYvkCs7n_7MduDVksubh&s=10',
+            sapo: 'https://www.infoescola.com/wp-content/uploads/2014/03/DSC06557.jpg',
+            guarda_chuva: 'https://static.vecteezy.com/ti/vetor-gratis/p1/74667889-azul-guarda-chuva-ilustracao-desenho-animado-estilo-isolado-em-branco-fundo-vetor.jpg',
+            girafa: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWDDkyOCD0jSoNdM_hT7iwBvDBYBCWeTfWiQZyxWLRjCiRmR2eHlKf5fcx&s=10',
+            elefante: 'https://upload.wikimedia.org/wikipedia/commons/d/dc/Elephant_near_ndutu.jpg?utm_source=pt.wikipedia.org&utm_campaign=index&utm_content=original',
+            leao: 'https://static.nationalgeographicbrasil.com/files/styles/image_3200/public/nationalgeographic_2788792_0.webp?w=1600&h=900',
+            macaco: 'https://imagenes.elpais.com/resizer/v2/WQGOZS5S7D3DCLWMVVJM7S5VAQ.jpg?auth=d6a587caabc3fe9784b42f91cb3d8ebbd00fb04408d5ae49cf7ccf42dce579f3&width=980&height=980&smart=true',
+            zebra: 'https://upload.wikimedia.org/wikipedia/commons/6/69/Equus_zebra_-_Disney%27s_Animal_Kingdom_Lodge%2C_Orlando%2C_Florida%2C_USA_-_20100119.jpg?utm_source=pt.wikipedia.org&utm_campaign=index&utm_content=original',
+            blocos: 'https://images.unsplash.com/photo-1587654780291-39c9404d746b?w=400&q=80',
+            baloes: 'https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=400&q=80',
+            casaco: 'https://images.unsplash.com/photo-1539533018447-63fcce2678e3?w=400&q=80',
+            tartaruga: 'https://images.unsplash.com/photo-1437622368342-7a3d73a34c8f?w=400&q=80',
+            roupa_banho: 'https://static.vecteezy.com/ti/vetor-gratis/p1/47553981-desenho-animado-ilustracao-do-feliz-criancas-natacao-dentro-uma-piscina-vestindo-roupa-de-banho-vetor.jpg',
+            camiseta_chinelo: 'https://thumbs.dreamstime.com/z/car%C3%A1ter-da-cor-dos-desenhos-animados-do-vetor-homem-novo-na-camisa-havaiana-e-no-short-azul-colorida-144666429.jpg',
+            fantasia: 'https://static.vecteezy.com/ti/vetor-gratis/p1/10301110-bonito-criancas-cartoon-vestindo-traje-de-dragao-vetor.jpg',
+            casaco_gorro: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTfcCdQVueG6vHgbdmKBQZeox7WWKuClc_hGZo-tR_LzitVrqCc-_3VKYp7&s=10',
+            pijama: 'https://i.pinimg.com/1200x/04/21/e5/0421e55439d5401af9df7b323998632f.jpg',
+            sorvete: 'https://png.pngtree.com/png-clipart/20240722/original/pngtree-a-drawing-of-an-ice-cream-cone-with-on-it-png-image_15611397.png',
+            cenoura: 'https://static.vecteezy.com/ti/vetor-gratis/p1/8719418-desenho-bonito-cenoura-vetor.jpg',
+            bolo: 'https://img.magnific.com/vetores-premium/ilustracao-vetorial-de-estilo-desenho-animado-de-clipart-de-bolo_761413-10092.jpg?semt=ais_hybrid&w=740&q=80',
+            pirulito: 'https://static.vecteezy.com/ti/vetor-gratis/p1/5490830-desenhoial-de-pirulito-redemoinho-doce-vetor.jpg',
+            pedro_ana_blocos: 'https://i.pinimg.com/736x/da/f9/e3/daf9e395276b605135fc02d06282c3d7.jpg',
+            bia_baloes: 'https://thumbs.dreamstime.com/b/menina-feliz-em-roupas-cor-de-rosa-segurando-bal%C3%B5es-coloridos-crian%C3%A7a-animada-com-rabo-cavalo-sorrindo-e-brincando-cartoon-380234044.jpg',
+            bezerro: 'https://www.coimma.com.br/blog/upload/images/cuidados-na-cria%C3%A7%C3%A3o-de-bezerro.jpg',
+            cordeiro: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTK8yWxhA-Z18iOw9yMXCSWRNENKz_1HodQf3ulbvFtardWDPSWqmeH_wc&s=10',
+            pintinho: 'https://img.magnific.com/fotos-premium/pintinho-amarelo-bonito_200040-1532.jpg',
+            suco_maca: 'https://media.istockphoto.com/id/1820692483/pt/vetorial/apple-juice-in-glass-isolated-on-white-background-fresh-fruit-drink-vector-cartoon.jpg?s=612x612&w=0&k=20&c=K3seCnW-RH9iKaJDJlzBPo-k22_igdVqu2MuO-tZ428=',
+            sofia_blocos: 'https://static.vecteezy.com/ti/vetor-gratis/p1/8733752-desenho-menina-brincando-com-blocos-de-construcao-vetor.jpg'
+        };
+
+        const questionsData = [
+            // FÁCIL (1 a 6)
+            {
+                id: 1, level: 'Fácil', check: 1, text: "Qual destes animais faz 'quac, quac'?",
+                promptImg: null,
+                options: [
+                    { text: "Cachorro", img: IMAGES.cachorro },
+                    { text: "Pato", img: IMAGES.pato },
+                    { text: "Gato", img: IMAGES.gato },
+                    { text: "Cavalo", img: IMAGES.cavalo }
+                ], correct: 1
+            },
+            {
+                id: 2, level: 'Fácil', check: 1, text: "Qual forma geométrica tem três pontinhas?",
+                promptImg: null,
+                options: [
+                    { text: "Círculo", img: IMAGES.circulo },
+                    { text: "Quadrado", img: IMAGES.quadrado },
+                    { text: "Triângulo", img: IMAGES.triangulo },
+                    { text: "Retângulo", img: IMAGES.retangulo }
+                ], correct: 2
+            },
+            {
+                id: 3, level: 'Fácil', check: 1, text: "Quantas maçãs aparecem na imagem?",
+                promptImg: 'https://static.vecteezy.com/ti/vetor-gratis/p1/47564170-tres-brilhante-vermelho-macas-com-verde-folhas-estao-deitado-vetor.jpg',
+                options: [
+                    { text: "Duas", img: IMAGES.macas3 },
+                    { text: "Três", img: IMAGES.macas3 },
+                    { text: "Quatro", img: IMAGES.macas3 },
+                    { text: "Cinco", img: IMAGES.macas3 }
+                ], correct: 1
+            },
+            {
+                id: 4, level: 'Fácil', check: 1, text: "O que ilumina o céu durante o dia?",
+                promptImg: null,
+                options: [
+                    { text: "A Lua", img: IMAGES.lua },
+                    { text: "Uma estrela", img: IMAGES.estrela },
+                    { text: "Uma nuvem", img: IMAGES.nuvem },
+                    { text: "O Sol", img: IMAGES.sol }
+                ], correct: 3
+            },
+            {
+                id: 5, level: 'Fácil', check: 1, text: "Qual destes animais vive na água?",
+                promptImg: null,
+                options: [
+                    { text: "Cachorro", img: IMAGES.cachorro },
+                    { text: "Galinha", img: IMAGES.galinha },
+                    { text: "Peixe", img: IMAGES.peixe },
+                    { text: "Coelho", img: IMAGES.coelho }
+                ], correct: 2
+            },
+            {
+                id: 6, level: 'Fácil', check: 1, text: "O que usamos para escovar os dentes?",
+                promptImg: null,
+                options: [
+                    { text: "Pente", img: IMAGES.pente },
+                    { text: "Escova de dentes", img: IMAGES.escova },
+                    { text: "Colher", img: IMAGES.colher },
+                    { text: "Lápis", img: IMAGES.lapis }
+                ], correct: 1
+            },
+
+            // MÉDIO (7 a 14)
+            {
+                id: 7, level: 'Médio', check: 7, text: "Qual grupo tem mais joaninhas?",
+                promptImg: null,
+                options: [
+                    { text: "Grupo 1", img: IMAGES.joaninhas_grupo1 },
+                    { text: "Grupo 2", img: IMAGES.joaninhas_grupo2 },
+                    { text: "Grupo 3", img: IMAGES.joaninhas_grupo3 }
+                ], correct: 2
+            },
+            {
+                id: 8, level: 'Médio', check: 7, text: "Observe a sequência: Vermelho, Azul, Vermelho, Azul. Qual cor vem depois?",
+                promptImg: null,
+                options: [
+                    { text: "Azul", img: IMAGES.sequencia_azul },
+                    { text: "Vermelho", img: IMAGES.sequencia_vermelho }
+                ], correct: 1
+            },
+            {
+                id: 9, level: 'Médio', check: 7, text: "Qual animal consegue pular e costuma viver perto de lagoas?",
+                promptImg: null,
+                options: [
+                    { text: "Peixe", img: IMAGES.peixe },
+                    { text: "Cavalo", img: IMAGES.cavalo },
+                    { text: "Tartaruga", img: IMAGES.tartaruga },
+                    { text: "Passarinho", img: IMAGES.passarinho },
+                    { text: "Sapo", img: IMAGES.sapo }
+                ], correct: 4
+            },
+            {
+                id: 10, level: 'Médio', check: 7, text: "Qual objeto usamos para nos proteger da chuva?",
+                promptImg: null,
+                options: [
+                    { text: "Mochila", img: IMAGES.mochila },
+                    { text: "Bola", img: IMAGES.bola },
+                    { text: "Guarda-chuva", img: IMAGES.guarda_chuva },
+                    { text: "Copo", img: IMAGES.copo },
+                    { text: "Boné", img: IMAGES.bone }
+                ], correct: 2
+            },
+            {
+                id: 11, level: 'Médio', check: 7, text: "fila de blocos: azul, amarelo, verde, azul amarelo, verde, azul, ... qual cor completa a sequencia",
+                promptImg: null,
+                options: [
+                    { text: "Bloco Amarelo", img: IMAGES.lego_amarelo },
+                    { text: "Bloco Verde", img: IMAGES.lego_verde },
+                    { text: "Bloco Azul", img: IMAGES.lego_azul }
+                ], correct: 0
+            },
+            {
+                id: 12, level: 'Médio', check: 7, text: "Está muito frio e começou a nevar. O que é melhor vestir?",
+                promptImg: null,
+                options: [
+                    { text: "Roupa de banho", img: IMAGES.roupa_banho },
+                    { text: "Camiseta e chinelos", img: IMAGES.camiseta_chinelo },
+                    { text: "Fantasia", img: IMAGES.fantasia },
+                    { text: "Casaco e gorro", img: IMAGES.casaco_gorro },
+                    { text: "Pijama", img: IMAGES.pijama }
+                ], correct: 3
+            },
+            {
+                id: 13, level: 'Médio', check: 7, text: "O coelho encontrou alimentos. Qual é o mais adequado para ele?",
+                promptImg: IMAGES.coelho,
+                options: [
+                    { text: "Peixe", img: IMAGES.peixe },
+                    { text: "Sorvete", img: IMAGES.sorvete },
+                    { text: "Cenoura", img: IMAGES.cenoura },
+                    { text: "Bolo", img: IMAGES.bolo },
+                    { text: "Pirulito", img: IMAGES.pirulito }
+                ], correct: 2
+            },
+            {
+                id: 14, level: 'Médio', check: 7, text: "Qual destes animais tem o pescoço mais comprido?",
+                promptImg: null,
+                options: [
+                    { text: "Leão", img: IMAGES.leao },
+                    { text: "Elefante", img: IMAGES.elefante },
+                    { text: "Macaco", img: IMAGES.macaco },
+                    { text: "Zebra", img: IMAGES.zebra },
+                    { text: "Girafa", img: IMAGES.girafa }
+                ], correct: 4
+            },
+
+            // DIFÍCIL (15 a 20)
+            {
+                id: 15, level: 'Difícil', check: 15, text: "Pedro tem 2 blocos e Ana tem 4. Quantos blocos eles têm juntos?",
+                promptImg: IMAGES.pedro_ana_blocos,
+                options: [
+                    { text: "4 blocos", img: IMAGES.blocos },
+                    { text: "5 blocos", img: IMAGES.blocos },
+                    { text: "6 blocos", img: IMAGES.blocos },
+                    { text: "7 blocos", img: IMAGES.blocos },
+                    { text: "8 blocos", img: IMAGES.blocos },
+                    { text: "9 blocos", img: IMAGES.blocos }
+                ], correct: 2
+            },
+            {
+                id: 16, level: 'Difícil', check: 15, text: "Bia tem 4 balões e ganha mais 1. Quantos balões ela terá?",
+                promptImg: IMAGES.bia_baloes,
+                options: [
+                    { text: "3 balões", img: IMAGES.baloes },
+                    { text: "4 balões", img: IMAGES.baloes },
+                    { text: "6 balões", img: IMAGES.baloes },
+                    { text: "7 balões", img: IMAGES.baloes },
+                    { text: "5 balões", img: IMAGES.baloes },
+                    { text: "2 balões", img: IMAGES.baloes }
+                ], correct: 4
+            },
+            {
+                id: 17, level: 'Difícil', check: 15, text: "Qual animal consegue voar usando suas asas?",
+                promptImg: null,
+                options: [
+                    { text: "Coelho", img: IMAGES.coelho },
+                    { text: "Tartaruga", img: IMAGES.tartaruga },
+                    { text: "Peixe", img: IMAGES.peixe },
+                    { text: "Passarinho", img: IMAGES.passarinho },
+                    { text: "Gato", img: IMAGES.gato },
+                    { text: "Sapo", img: IMAGES.sapo }
+                ], correct: 3
+            },
+            {
+                id: 18, level: 'Difícil', check: 15, text: "Qual filhote nasce de um ovo?",
+                promptImg: null,
+                options: [
+                    { text: "Gatinho", img: IMAGES.gato },
+                    { text: "Cachorrinho", img: IMAGES.cachorro },
+                    { text: "Bezerro", img: IMAGES.bezerro },
+                    { text: "Cordeiro", img: IMAGES.cordeiro },
+                    { text: "Pintinho", img: IMAGES.pintinho },
+                    { text: "Coelhinho", img: IMAGES.coelho }
+                ], correct: 4
+            },
+            {
+                id: 19, level: 'Difícil', check: 15, text: "Havia 7 maçãs na cesta. A mamãe usou 3 para fazer um suco. Quantas sobram?",
+                promptImg: IMAGES.suco_maca,
+                options: [
+                    { text: "3 maçãs", img: IMAGES.macas3 },
+                    { text: "4 maçãs", img: IMAGES.macas3 },
+                    { text: "5 maçãs", img: IMAGES.macas3 },
+                    { text: "6 maçãs", img: IMAGES.macas3 },
+                    { text: "7 maçãs", img: IMAGES.macas3 },
+                    { text: "2 maçãs", img: IMAGES.macas3 }
+                ], correct: 1
+            },
+            {
+                id: 20, level: 'Difícil', check: 15, text: "Sofia tem 8 blocos. Guarda 3 na caixa e ganha mais 2. Com quantos fica ao todo?",
+                promptImg: IMAGES.sofia_blocos,
+                options: [
+                    { text: "5 blocos", img: IMAGES.blocos },
+                    { text: "6 blocos", img: IMAGES.blocos },
+                    { text: "7 blocos", img: IMAGES.blocos },
+                    { text: "8 blocos", img: IMAGES.blocos },
+                    { text: "9 blocos", img: IMAGES.blocos },
+                    { text: "10 blocos", img: IMAGES.blocos }
+                ], correct: 2
+            }
+        ];
+
+        let playerData = { name: "", age: "", school: "" };
+        let currentQuestionIndex = 0;
+        let livesAttempt = 2;
+        let score = 0;
+        let questionResults = Array(questionsData.length).fill(null); // 'correct', 'wrong', or null
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function startGame() {
+            const name = document.getElementById('student-name').value.trim();
+            const age = document.getElementById('student-age').value;
+            const school = document.getElementById('student-school').value.trim();
+
+            if (!name || !age) {
+                alert("Por favor, preencha o Nome e selecione a Idade do aluno!");
+                return;
+            }
+
+            playerData = { name, age, school };
+            document.getElementById('player-greeting').innerText = `Olá, ${name}! Escolha uma fase liberada:`;
+            renderMap();
+            showScreen('screen-map');
+        }
+
+        function renderMap() {
+            const container = document.getElementById('map-grid');
+            container.innerHTML = '';
+
+            questionsData.forEach((q, idx) => {
+                const card = document.createElement('div');
+                const res = questionResults[idx];
+                let statusClass = 'locked';
+                let iconSymbol = '';
+
+                if (res === 'correct') {
+                    statusClass = 'status-correct';
+                    iconSymbol = '✓';
+                } else if (res === 'wrong') {
+                    statusClass = 'status-wrong';
+                    iconSymbol = '✗';
+                } else if (idx === currentQuestionIndex) {
+                    statusClass = 'unlocked';
+                }
+
+                card.className = `map-card ${statusClass}`;
+                card.innerHTML = `
+                    <div class="num">${q.id}</div>
+                    <div class="tag">${q.level}</div>
+                    <div class="status-icon">${iconSymbol}</div>
+                `;
+
+                if (idx <= currentQuestionIndex) {
+                    card.onclick = () => {
+                        currentQuestionIndex = idx;
+                        playCurrentQuestion();
+                    };
+                }
+
+                container.appendChild(card);
+            });
+        }
+
+        function playCurrentQuestion() {
+            livesAttempt = 2;
+            const q = questionsData[currentQuestionIndex];
+
+            document.getElementById('level-indicator').innerText = `Nível ${q.level} (Fase ${q.id}/20)`;
+            document.getElementById('score-indicator').innerText = `⭐ ${score} Pontos`;
+            document.getElementById('question-text').innerText = q.text;
+
+            const promptImgEl = document.getElementById('question-prompt-img');
+            if (q.promptImg) {
+                promptImgEl.src = q.promptImg;
+                promptImgEl.style.display = 'block';
+            } else {
+                promptImgEl.style.display = 'none';
+            }
+
+            const optsContainer = document.getElementById('options-container');
+            optsContainer.innerHTML = '';
+            optsContainer.className = `options-grid ${q.options.length > 4 ? 'cols-3' : ''}`;
+
+            q.options.forEach((opt, idx) => {
+                const optCard = document.createElement('div');
+                optCard.className = 'option-card';
+                optCard.innerHTML = `
+                    <img src="${opt.img}" alt="${opt.text}">
+                    <span>${opt.text}</span>
+                `;
+                optCard.onclick = () => checkAnswer(idx);
+                optsContainer.appendChild(optCard);
+            });
+
+            showScreen('screen-game');
+            speakQuestion();
+        }
+
+        function checkAnswer(selectedIndex) {
+            const q = questionsData[currentQuestionIndex];
+
+            if (selectedIndex === q.correct) {
+                score += 10;
+                questionResults[currentQuestionIndex] = 'correct';
+                openModal("🌟 Muito Bem!", "Você acertou! Vamos para a próxima fase!", () => {
+                    currentQuestionIndex++;
+                    if (currentQuestionIndex >= questionsData.length) {
+                        finishGame();
+                    } else {
+                        renderMap();
+                        showScreen('screen-map');
+                    }
+                });
+            } else {
+                livesAttempt--;
+                if (livesAttempt > 0) {
+                    openModal("💡 Segunda Chance!", "Quase lá! Tente mais uma vez com bastante atenção!", null);
+                } else {
+                    questionResults[currentQuestionIndex] = 'wrong';
+                    openModal("❌ Que pena!", "Resposta incorreta. Vamos para a próxima pergunta!", () => {
+                        currentQuestionIndex++;
+                        if (currentQuestionIndex >= questionsData.length) {
+                            finishGame();
+                        } else {
+                            renderMap();
+                            showScreen('screen-map');
+                        }
+                    });
+                }
+            }
+        }
+
+        function speakQuestion() {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const q = questionsData[currentQuestionIndex];
+                const textToSpeak = `${q.text}. As opções são: ${q.options.map(o => o.text).join(', ')}`;
+                const msg = new SpeechSynthesisUtterance(textToSpeak);
+                msg.lang = 'pt-BR';
+                msg.rate = 0.88;
+                window.speechSynthesis.speak(msg);
+            }
+        }
+
+        function openModal(title, msg, onConfirm) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-msg').innerText = msg;
+            const btn = document.getElementById('modal-btn');
+
+            btn.onclick = () => {
+                closeModal();
+                if (onConfirm) onConfirm();
+            };
+
+            document.getElementById('feedback-modal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('feedback-modal').style.display = 'none';
+        }
+
+        function finishGame() {
+            const totalCorrect = questionResults.filter(r => r === 'correct').length;
+            const totalWrong = questionResults.filter(r => r === 'wrong').length;
+
+            document.getElementById('cert-name').innerText = `Aluno: ${playerData.name}`;
+            document.getElementById('cert-info').innerText = `Idade: ${playerData.age} anos | Escola: ${playerData.school || 'Não informada'}`;
+            document.getElementById('cert-score').innerText = `⭐ Pontuação Total: ${score} pontos`;
+            document.getElementById('cert-correct').innerText = `✓ Acertos: ${totalCorrect}`;
+            document.getElementById('cert-wrong').innerText = `✗ Erros: ${totalWrong}`;
+
+            showScreen('screen-end');
+        }
+
+        function restartGame() {
+            currentQuestionIndex = 0;
+            score = 0;
+            questionResults = Array(questionsData.length).fill(null);
+            showScreen('screen-welcome');
+        }
+    </script>
+</body>
+</html>
